@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             xmlns:camunda="http://camunda.org/schema/1.0/dmn"
+             id="Definitions_loan"
+             name="loanMaxAmount"
+             namespace="http://camunda.org/schema/1.0/dmn">
+
+    <decision id="maxLoanAmountDecision" name="最高可贷额度计算" camunda:historyTimeToLive="180">
+        <decisionTable id="DecisionTable_1" hitPolicy="UNIQUE">
+            <input id="Input_1" label="信用分">
+                <inputExpression id="InputExpression_1" typeRef="integer">
+                    <text>creditScore</text>
+                </inputExpression>
+            </input>
+            <input id="Input_2" label="年收入(万元)">
+                <inputExpression id="InputExpression_2" typeRef="number">
+                    <text>annualIncome / 10000</text>
+                </inputExpression>
+            </input>
+
+            <output id="Output_1" label="最高可贷倍数" name="maxMultiplier" typeRef="number"/>
+            <output id="Output_2" label="利率折扣" name="rateDiscount" typeRef="number"/>
+
+            <rule id="Rule_1">
+                <inputEntry id="InputEntry_1_1">
+                    <text>&gt;= 750</text>
+                </inputEntry>
+                <inputEntry id="InputEntry_1_2">
+                    <text>&gt;= 30</text>
+                </inputEntry>
+                <outputEntry id="OutputEntry_1_1">
+                    <text>15</text>
+                </outputEntry>
+                <outputEntry id="OutputEntry_1_2">
+                    <text>0.9</text>
+                </outputEntry>
+            </rule>
+            <rule id="Rule_2">
+                <inputEntry id="InputEntry_2_1">
+                    <text>&gt;= 750</text>
+                </inputEntry>
+                <inputEntry id="InputEntry_2_2">
+                    <text>&lt; 30</text>
+                </inputEntry>
+                <outputEntry id="OutputEntry_2_1">
+                    <text>10</text>
+                </outputEntry>
+                <outputEntry id="OutputEntry_2_2">
+                    <text>0.95</text>
+                </outputEntry>
+            </rule>
+            <rule id="Rule_3">
+                <inputEntry id="InputEntry_3_1">
+                    <text>[650..750)</text>
+                </inputEntry>
+                <inputEntry id="InputEntry_3_2">
+                    <text>&gt;= 20</text>
+                </inputEntry>
+                <outputEntry id="OutputEntry_3_1">
+                    <text>8</text>
+                </outputEntry>
+                <outputEntry id="OutputEntry_3_2">
+                    <text>1</text>
+                </outputEntry>
+            </rule>
+            <rule id="Rule_4">
+                <inputEntry id="InputEntry_4_1">
+                    <text>[550..650)</text>
+                </inputEntry>
+                <inputEntry id="InputEntry_4_2">
+                    <text>-</text>
+                </inputEntry>
+                <outputEntry id="OutputEntry_4_1">
+                    <text>5</text>
+                </outputEntry>
+                <outputEntry id="OutputEntry_4_2">
+                    <text>1.1</text>
+                </outputEntry>
+            </rule>
+            <rule id="Rule_5">
+                <inputEntry id="InputEntry_5_1">
+                    <text>&lt; 550</text>
+                </inputEntry>
+                <inputEntry id="InputEntry_5_2">
+                    <text>-</text>
+                </inputEntry>
+                <outputEntry id="OutputEntry_5_1">
+                    <text>0</text>
+                </outputEntry>
+                <outputEntry id="OutputEntry_5_2">
+                    <text>1</text>
+                </outputEntry>
+            </rule>
+        </decisionTable>
+    </decision>
+</definitions>

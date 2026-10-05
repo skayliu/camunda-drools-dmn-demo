@@ -1,0 +1,118 @@
+package rules;
+import com.example.camundadrools.model.LoanApplication;
+import java.math.BigDecimal;
+
+// ==========================================
+// 拒绝类规则 - 直接命中拒绝条件
+// ==========================================
+
+// 规则1：负债比超过70% 直接拒绝
+rule "high debt ratio reject"
+    salience 100 // 高优先级，先执行拒绝规则
+    when
+        $app : LoanApplication(debtRatio > 0.7, approve == null)
+    then
+        $app.setApprove(false);
+        $app.setRejectReason("负债比超过70%，还款能力不足");
+        update($app);
+end
+
+// 规则2：信用分低于500且无担保 拒绝
+rule "low credit score no guarantor reject"
+    salience 90
+    when
+        $app : LoanApplication(creditScore < 500, hasGuarantor == false, approve == null)
+    then
+        $app.setApprove(false);
+        $app.setRejectReason("信用分低于500且无担保人，风险过高");
+        update($app);
+end
+
+// 规则3：信用分低于400 无论如何都拒绝
+rule "extremely low credit score reject"
+    salience 100
+    when
+        $app : LoanApplication(creditScore < 400, approve == null)
+    then
+        $app.setApprove(false);
+        $app.setRejectReason("信用分低于400，黑名单客户");
+        update($app);
+end
+
+// 规则4：申请额度超过年收入10倍 拒绝
+rule "loan amount too high reject"
+    salience 80
+    when
+        $app : LoanApplication(loanAmount.compareTo(annualIncome.multiply(new BigDecimal(10))) > 0, approve == null)
+    then
+        $app.setApprove(false);
+        $app.setRejectReason("申请额度超过年收入10倍，超出偿付能力");
+        update($app);
+end
+
+// ==========================================
+// 通过类规则 - 优质客户自动通过
+// ==========================================
+
+// 规则5：优质A级客户：信用分>750 + 负债比<30% + 额度<50万
+rule "premium grade A customer"
+    salience 50
+    when
+        $app : LoanApplication(
+            creditScore > 750,
+            debtRatio < 0.3,
+            loanAmount < new BigDecimal(500000),
+            approve == null
+        )
+    then
+        $app.setApprove(true);
+        $app.setApprovalLevel("A");
+        $app.setInterestRate(new BigDecimal("0.042")); // 年利率4.2%
+        update($app);
+end
+
+// 规则6：B级客户：信用分>650 + 负债比<50% + 有抵押
+rule "grade B customer with collateral"
+    salience 40
+    when
+        $app : LoanApplication(
+            creditScore > 650,
+            debtRatio < 0.5,
+            hasCollateral == true,
+            approve == null
+        )
+    then
+        $app.setApprove(true);
+        $app.setApprovalLevel("B");
+        $app.setInterestRate(new BigDecimal("0.048")); // 年利率4.8%
+        update($app);
+end
+
+// 规则7：C级客户：信用分>550 + 有担保人
+rule "grade C customer with guarantor"
+    salience 30
+    when
+        $app : LoanApplication(
+            creditScore > 550,
+            hasGuarantor == true,
+            debtRatio < 0.6,
+            approve == null
+        )
+    then
+        $app.setApprove(true);
+        $app.setApprovalLevel("C");
+        $app.setInterestRate(new BigDecimal("0.056")); // 年利率5.6%
+        update($app);
+end
+
+// 规则8：兜底规则 - 需要人工审核
+rule "manual review required"
+    salience 10
+    when
+        $app : LoanApplication(approve == null)
+    then
+        $app.setApprove(null); // null表示待人工审核
+        $app.setApprovalLevel("D");
+        $app.setInterestRate(new BigDecimal("0.060"));
+        $app.setRejectReason("未命中自动审批规则，转人工审核");
+end

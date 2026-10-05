@@ -1,0 +1,37 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: camunda-drools-dmn-demo
+  datasource:
+    url: jdbc:h2:mem:camunda;DB_CLOSE_DELAY=-1;MODE=MYSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+camunda:
+  bpm:
+    database:
+      schema-update: true
+    admin-user:
+      id: admin
+      password: admin
+      firstName: Admin
+    filter:
+      create: All tasks
+    # 注意属性名：是 deployment-resource-pattern（写成 deployment.resources 会被静默忽略）
+    deployment-resource-pattern: classpath*:**/*.bpmn,classpath*:**/*.dmn
+    history-level: full
+    authorization:
+      enabled: false
+
+logging:
+  level:
+    org.drools: INFO
+    org.camunda: INFO
+    com.example: DEBUG
